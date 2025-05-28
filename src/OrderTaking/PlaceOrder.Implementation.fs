@@ -339,7 +339,24 @@ let acknowledgeOrder: AcknowledgeOrder =
 
                 Some event
             | NotSent -> None
-        | _ -> None
+        | PricedOrderWithShippingInformation pricedOrderWithsShipmentInformation ->
+            let pricedOrder = pricedOrderWithsShipmentInformation.PricedOrder
+            let letter = createAcknowledgmentLetter pricedOrder
+
+            let acknowledgment =
+                { EmailAddress = pricedOrder.CustomerInfo.EmailAddress
+                  Letter = letter }
+
+            // if the acknowledgement was successfully sent,
+            // return the corresponding event, else return None
+            match sendAcknowledgment acknowledgment with
+            | Sent ->
+                let event =
+                    { OrderId = pricedOrder.OrderId
+                      EmailAddress = pricedOrder.CustomerInfo.EmailAddress }
+
+                Some event
+            | NotSent -> None
 
 // ---------------------------
 // Create events
