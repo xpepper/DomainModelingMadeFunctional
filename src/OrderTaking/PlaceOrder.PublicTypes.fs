@@ -69,6 +69,18 @@ type PricedOrder = {
     Lines : PricedOrderLine list
     }
 
+type ShippingMethod =
+    | Bartolini
+    | PosteItaliane
+    | GLS
+    | UPS
+
+type PricedOrderWithShippingInformation = {
+    PricedOrder : PricedOrder
+    ShippingMethod : ShippingMethod
+    ShippingCost : Price
+}
+
 /// Event to send to shipping context
 type OrderPlaced = PricedOrder
 
