@@ -75,13 +75,17 @@ type PriceOrder =
 // Send OrderAcknowledgment
 // ---------------------------
 
+type OrderToAcknowledge =
+    | PricedOrder of PricedOrder
+    | PricedOrderWithShippingInformation of PricedOrderWithShippingInformation
+
 type HtmlString = HtmlString of string
 
 type OrderAcknowledgment =
     { EmailAddress: EmailAddress
       Letter: HtmlString }
 
-type CreateOrderAcknowledgmentLetter = PricedOrder -> HtmlString
+type CreateOrderAcknowledgmentLetter = OrderToAcknowledge -> HtmlString
 
 /// Send the order acknowledgement to the customer
 /// Note that this does NOT generate an Result-type error (at least not in this workflow)
@@ -94,10 +98,6 @@ type SendResult =
     | NotSent
 
 type SendOrderAcknowledgment = OrderAcknowledgment -> SendResult
-
-type OrderToAcknowledge =
-    | PricedOrder of PricedOrder
-    | PricedOrderWithShippingInformation of PricedOrderWithShippingInformation
 
 type AcknowledgeOrder =
     CreateOrderAcknowledgmentLetter // dependency
@@ -323,7 +323,7 @@ let acknowledgeOrder: AcknowledgeOrder =
     fun createAcknowledgmentLetter sendAcknowledgment orderToAcknowledge ->
         match orderToAcknowledge with
         | PricedOrder pricedOrder ->
-            let letter = createAcknowledgmentLetter pricedOrder
+            let letter = createAcknowledgmentLetter orderToAcknowledge
 
             let acknowledgment =
                 { EmailAddress = pricedOrder.CustomerInfo.EmailAddress
@@ -341,7 +341,7 @@ let acknowledgeOrder: AcknowledgeOrder =
             | NotSent -> None
         | PricedOrderWithShippingInformation pricedOrderWithsShipmentInformation ->
             let pricedOrder = pricedOrderWithsShipmentInformation.PricedOrder
-            let letter = createAcknowledgmentLetter pricedOrder
+            let letter = createAcknowledgmentLetter orderToAcknowledge
 
             let acknowledgment =
                 { EmailAddress = pricedOrder.CustomerInfo.EmailAddress
