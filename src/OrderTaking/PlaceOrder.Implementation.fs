@@ -102,10 +102,13 @@ type SendResult = Sent | NotSent
 type SendOrderAcknowledgment =
     OrderAcknowledgment -> SendResult
 
+type OrderToAcknowledge =
+    | PricedOrder of PricedOrder
+
 type AcknowledgeOrder =
     CreateOrderAcknowledgmentLetter  // dependency
      -> SendOrderAcknowledgment      // dependency
-     -> PricedOrder                  // input
+     -> OrderToAcknowledge           // input
      -> OrderAcknowledgmentSent option // output
 
 // ---------------------------
@@ -338,24 +341,26 @@ let priceOrder : PriceOrder =
 // ---------------------------
 
 let acknowledgeOrder : AcknowledgeOrder =
-    fun createAcknowledgmentLetter sendAcknowledgment pricedOrder ->
-        let letter = createAcknowledgmentLetter pricedOrder
-        let acknowledgment = {
-            EmailAddress = pricedOrder.CustomerInfo.EmailAddress
-            Letter = letter
-            }
-
-        // if the acknowledgement was successfully sent,
-        // return the corresponding event, else return None
-        match sendAcknowledgment acknowledgment with
-        | Sent ->
-            let event = {
-                OrderId = pricedOrder.OrderId
+    fun createAcknowledgmentLetter sendAcknowledgment orderToAcknowledge ->
+        match orderToAcknowledge with
+        | PricedOrder pricedOrder ->
+            let letter = createAcknowledgmentLetter pricedOrder
+            let acknowledgment = {
                 EmailAddress = pricedOrder.CustomerInfo.EmailAddress
+                Letter = letter
                 }
-            Some event
-        | NotSent ->
-            None
+
+            // if the acknowledgement was successfully sent,
+            // return the corresponding event, else return None
+            match sendAcknowledgment acknowledgment with
+            | Sent ->
+                let event = {
+                    OrderId = pricedOrder.OrderId
+                    EmailAddress = pricedOrder.CustomerInfo.EmailAddress
+                    }
+                Some event
+            | NotSent ->
+                None
 
 // ---------------------------
 // Create events
@@ -428,7 +433,7 @@ let placeOrder
                 |> AsyncResult.ofResult
                 |> AsyncResult.mapError PlaceOrderError.Pricing
             let acknowledgementOption =
-                acknowledgeOrder createOrderAcknowledgmentLetter sendOrderAcknowledgment pricedOrder
+                acknowledgeOrder createOrderAcknowledgmentLetter sendOrderAcknowledgment (OrderToAcknowledge.PricedOrder pricedOrder)
             let events =
                 createEvents pricedOrder acknowledgementOption
             return events
