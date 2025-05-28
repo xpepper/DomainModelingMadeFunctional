@@ -95,7 +95,9 @@ type SendResult =
 
 type SendOrderAcknowledgment = OrderAcknowledgment -> SendResult
 
-type OrderToAcknowledge = PricedOrder of PricedOrder
+type OrderToAcknowledge =
+    | PricedOrder of PricedOrder
+    | PricedOrderWithShippingInformation of PricedOrderWithShippingInformation
 
 type AcknowledgeOrder =
     CreateOrderAcknowledgmentLetter // dependency
@@ -337,6 +339,7 @@ let acknowledgeOrder: AcknowledgeOrder =
 
                 Some event
             | NotSent -> None
+        | _ -> None
 
 // ---------------------------
 // Create events
