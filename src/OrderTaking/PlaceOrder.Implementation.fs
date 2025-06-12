@@ -395,6 +395,7 @@ let createEvents: CreateEvents =
 // overall workflow
 // ---------------------------
 
+// This is still with canned data
 let pricedOrderToPricedOrderWithShippingInformation (pricedOrder: PricedOrder) =
     let pricedOrderWithShippingInformation: PricedOrderWithShippingInformation =
         { PricedOrder = pricedOrder
