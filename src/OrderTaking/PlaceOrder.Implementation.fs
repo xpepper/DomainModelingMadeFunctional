@@ -321,11 +321,11 @@ let priceOrder: PriceOrder =
 
 let acknowledgeOrder: AcknowledgeOrder =
     fun createAcknowledgmentLetter sendAcknowledgment orderToAcknowledge ->
-        let pricedOrder = match orderToAcknowledge with
-                            | PricedOrder pricedOrder ->
-                                pricedOrder
-                            | PricedOrderWithShippingInformation pricedOrderWithShipmentInformation ->
-                                pricedOrderWithShipmentInformation.PricedOrder
+        let pricedOrder =
+            match orderToAcknowledge with
+            | PricedOrder pricedOrder -> pricedOrder
+            | PricedOrderWithShippingInformation pricedOrderWithShipmentInformation ->
+                pricedOrderWithShipmentInformation.PricedOrder
 
         let letter = createAcknowledgmentLetter orderToAcknowledge
 
@@ -397,11 +397,10 @@ let createEvents: CreateEvents =
 
 let pricedOrderToPricedOrderWithShippingInformation (pricedOrder: PricedOrder) =
     let pricedOrderWithShippingInformation: PricedOrderWithShippingInformation =
-        {
-            PricedOrder = pricedOrder
-            ShippingMethod = ShippingMethod.Bartolini
-            ShippingCost = Price.unsafeCreate 2M
-        }
+        { PricedOrder = pricedOrder
+          ShippingMethod = ShippingMethod.Bartolini
+          ShippingCost = Price.unsafeCreate 2M }
+
     pricedOrderWithShippingInformation
 
 let placeOrder
@@ -423,12 +422,17 @@ let placeOrder
                 |> AsyncResult.ofResult
                 |> AsyncResult.mapError PlaceOrderError.Pricing
 
+            let priceOrderWithShippingInformation =
+                pricedOrderToPricedOrderWithShippingInformation pricedOrder
+
             let acknowledgementOption =
                 acknowledgeOrder
                     createOrderAcknowledgmentLetter
                     sendOrderAcknowledgment
-                    (OrderToAcknowledge.PricedOrder pricedOrder)
+                    (OrderToAcknowledge.PricedOrderWithShippingInformation priceOrderWithShippingInformation)
 
-            let events = createEvents pricedOrder acknowledgementOption
+            let events =
+                createEvents priceOrderWithShippingInformation.PricedOrder acknowledgementOption
+
             return events
         }
