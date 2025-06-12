@@ -339,8 +339,8 @@ let acknowledgeOrder: AcknowledgeOrder =
 
                 Some event
             | NotSent -> None
-        | PricedOrderWithShippingInformation pricedOrderWithsShipmentInformation ->
-            let pricedOrder = pricedOrderWithsShipmentInformation.PricedOrder
+        | PricedOrderWithShippingInformation pricedOrderWithShipmentInformation ->
+            let pricedOrder = pricedOrderWithShipmentInformation.PricedOrder
             let letter = createAcknowledgmentLetter orderToAcknowledge
 
             let acknowledgment =
