@@ -395,14 +395,14 @@ let createEvents: CreateEvents =
 // overall workflow
 // ---------------------------
 
-let pricedOrderToPricedOrderWithShippingMethod (pricedOrder: PricedOrder) =
-    let pricedOrderWithShipmentInformation: PricedOrderWithShippingInformation =
+let pricedOrderToPricedOrderWithShippingInformation (pricedOrder: PricedOrder) =
+    let pricedOrderWithShippingInformation: PricedOrderWithShippingInformation =
         {
             PricedOrder = pricedOrder
             ShippingMethod = ShippingMethod.Bartolini
             ShippingCost = Price.unsafeCreate 2M
         }
-    pricedOrderWithShipmentInformation
+    pricedOrderWithShippingInformation
 
 let placeOrder
     checkProductExists // dependency
