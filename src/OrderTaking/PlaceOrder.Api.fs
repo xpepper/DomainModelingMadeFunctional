@@ -113,6 +113,8 @@ let placeOrderApi : PlaceOrderApi =
         // convert to domain object
         let unvalidatedOrder = orderForm |> OrderFormDto.toUnvalidatedOrder
 
+        let pricedOrderToPricedOrderWithShippingInformation = Implementation.pricedOrderToPricedOrderWithShippingInformationFactory Implementation.calculateShippingInformation
+
         // setup the dependencies. See "Injecting Dependencies" in chapter 9
         let workflow =
             Implementation.placeOrder
@@ -121,6 +123,7 @@ let placeOrderApi : PlaceOrderApi =
                 getProductPrice    // dependency
                 createOrderAcknowledgmentLetter  // dependency
                 sendOrderAcknowledgment // dependency
+                pricedOrderToPricedOrderWithShippingInformation // dependency
 
         // now we are in the pure domain
         let asyncResult = workflow unvalidatedOrder

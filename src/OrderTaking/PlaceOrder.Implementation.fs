@@ -431,6 +431,7 @@ let placeOrder
     getProductPrice // dependency
     createOrderAcknowledgmentLetter // dependency
     sendOrderAcknowledgment // dependency
+    pricedOrderToPricedOrderWithShippingInformation // dependency
     : PlaceOrder = // definition of function
 
     fun unvalidatedOrder ->
@@ -443,8 +444,6 @@ let placeOrder
                 priceOrder getProductPrice validatedOrder
                 |> AsyncResult.ofResult
                 |> AsyncResult.mapError PlaceOrderError.Pricing
-
-            let pricedOrderToPricedOrderWithShippingInformation = pricedOrderToPricedOrderWithShippingInformationFactory calculateShippingInformation
 
             let priceOrderWithShippingInformation = pricedOrderToPricedOrderWithShippingInformation pricedOrder
 
