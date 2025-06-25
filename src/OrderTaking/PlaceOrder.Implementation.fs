@@ -395,12 +395,27 @@ let createEvents: CreateEvents =
 // overall workflow
 // ---------------------------
 
+type ShippingCost = Price
+
+type ShippingInformation = {
+    Method: ShippingMethod
+    Cost: ShippingCost
+}
+
 // This is still with canned data
+let calculateShippingInformation (address: Address) : ShippingInformation =
+    {
+        Method = ShippingMethod.Bartolini
+        Cost = Price.unsafeCreate 2M
+    }
+
 let pricedOrderToPricedOrderWithShippingInformation (pricedOrder: PricedOrder) =
     let pricedOrderWithShippingInformation: PricedOrderWithShippingInformation =
+        let shippingInformation = calculateShippingInformation(pricedOrder.ShippingAddress)
+
         { PricedOrder = pricedOrder
-          ShippingMethod = ShippingMethod.Bartolini
-          ShippingCost = Price.unsafeCreate 2M }
+          ShippingMethod = shippingInformation.Method
+          ShippingCost = shippingInformation.Cost }
 
     pricedOrderWithShippingInformation
 
