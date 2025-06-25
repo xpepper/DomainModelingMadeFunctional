@@ -402,6 +402,8 @@ type ShippingInformation = {
     Cost: ShippingCost
 }
 
+type CalculateShippingInformation = Address -> ShippingInformation
+
 // This is still with canned data
 let calculateShippingInformation (address: Address) : ShippingInformation =
     {
@@ -409,7 +411,8 @@ let calculateShippingInformation (address: Address) : ShippingInformation =
         Cost = Price.unsafeCreate 2M
     }
 
-let pricedOrderToPricedOrderWithShippingInformation (pricedOrder: PricedOrder) =
+let pricedOrderToPricedOrderWithShippingInformation
+    (calculateShippingInformation: CalculateShippingInformation) (pricedOrder: PricedOrder) =
     let pricedOrderWithShippingInformation: PricedOrderWithShippingInformation =
         let shippingInformation = calculateShippingInformation(pricedOrder.ShippingAddress)
 
@@ -439,7 +442,7 @@ let placeOrder
                 |> AsyncResult.mapError PlaceOrderError.Pricing
 
             let priceOrderWithShippingInformation =
-                pricedOrderToPricedOrderWithShippingInformation pricedOrder
+                pricedOrderToPricedOrderWithShippingInformation calculateShippingInformation pricedOrder
 
             let acknowledgementOption =
                 acknowledgeOrder
