@@ -444,8 +444,9 @@ let placeOrder
                 |> AsyncResult.ofResult
                 |> AsyncResult.mapError PlaceOrderError.Pricing
 
-            let priceOrderWithShippingInformation =
-                pricedOrderToPricedOrderWithShippingInformationFactory calculateShippingInformation pricedOrder
+            let pricedOrderToPricedOrderWithShippingInformation = pricedOrderToPricedOrderWithShippingInformationFactory calculateShippingInformation
+
+            let priceOrderWithShippingInformation = pricedOrderToPricedOrderWithShippingInformation pricedOrder
 
             let acknowledgementOption =
                 acknowledgeOrder
