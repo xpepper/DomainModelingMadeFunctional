@@ -405,7 +405,8 @@ type ShippingInformation = {
 type CalculateShippingInformation = Address -> ShippingInformation
 
 // This is still with canned data
-let calculateShippingInformation (address: Address) : ShippingInformation =
+let calculateShippingInformation: CalculateShippingInformation =
+    fun address ->
     {
         Method = ShippingMethod.Bartolini
         Cost = Price.unsafeCreate 2M
