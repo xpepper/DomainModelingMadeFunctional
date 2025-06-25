@@ -404,6 +404,8 @@ type ShippingInformation = {
 
 type CalculateShippingInformation = Address -> ShippingInformation
 
+type PriceOrderToPriceOrderWithShippingInformation = PricedOrder -> PricedOrderWithShippingInformation
+
 // This is still with canned data
 let calculateShippingInformation: CalculateShippingInformation =
     fun address ->
@@ -413,15 +415,13 @@ let calculateShippingInformation: CalculateShippingInformation =
     }
 
 let pricedOrderToPricedOrderWithShippingInformation
-    (calculateShippingInformation: CalculateShippingInformation) (pricedOrder: PricedOrder) =
-    let pricedOrderWithShippingInformation: PricedOrderWithShippingInformation =
+    (calculateShippingInformation: CalculateShippingInformation) (pricedOrder: PricedOrder) : PricedOrderWithShippingInformation =
+
         let shippingInformation = calculateShippingInformation(pricedOrder.ShippingAddress)
 
         { PricedOrder = pricedOrder
           ShippingMethod = shippingInformation.Method
           ShippingCost = shippingInformation.Cost }
-
-    pricedOrderWithShippingInformation
 
 let placeOrder
     checkProductExists // dependency
