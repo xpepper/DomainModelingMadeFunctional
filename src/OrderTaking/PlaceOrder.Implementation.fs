@@ -414,7 +414,7 @@ let calculateShippingInformation: CalculateShippingInformation =
         Cost = Price.unsafeCreate 2M
     }
 
-let pricedOrderToPricedOrderWithShippingInformation
+let pricedOrderToPricedOrderWithShippingInformationFactory
     (calculateShippingInformation: CalculateShippingInformation) : PriceOrderToPriceOrderWithShippingInformation =
         fun pricedOrder ->
             let shippingInformation = calculateShippingInformation(pricedOrder.ShippingAddress)
@@ -445,7 +445,7 @@ let placeOrder
                 |> AsyncResult.mapError PlaceOrderError.Pricing
 
             let priceOrderWithShippingInformation =
-                pricedOrderToPricedOrderWithShippingInformation calculateShippingInformation pricedOrder
+                pricedOrderToPricedOrderWithShippingInformationFactory calculateShippingInformation pricedOrder
 
             let acknowledgementOption =
                 acknowledgeOrder
