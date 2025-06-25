@@ -415,13 +415,15 @@ let calculateShippingInformation: CalculateShippingInformation =
     }
 
 let pricedOrderToPricedOrderWithShippingInformation
-    (calculateShippingInformation: CalculateShippingInformation) (pricedOrder: PricedOrder) : PricedOrderWithShippingInformation =
+    (calculateShippingInformation: CalculateShippingInformation) : PriceOrderToPriceOrderWithShippingInformation =
+        fun pricedOrder ->
+            let shippingInformation = calculateShippingInformation(pricedOrder.ShippingAddress)
 
-        let shippingInformation = calculateShippingInformation(pricedOrder.ShippingAddress)
-
-        { PricedOrder = pricedOrder
-          ShippingMethod = shippingInformation.Method
-          ShippingCost = shippingInformation.Cost }
+            {
+                PricedOrder = pricedOrder
+                ShippingMethod = shippingInformation.Method
+                ShippingCost = shippingInformation.Cost
+            }
 
 let placeOrder
     checkProductExists // dependency
