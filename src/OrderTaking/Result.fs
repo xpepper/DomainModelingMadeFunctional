@@ -1,4 +1,4 @@
-﻿namespace global  // note use of GLOBAL namespace
+﻿namespace global // note use of GLOBAL namespace
 
 open System
 
@@ -19,7 +19,7 @@ type Result<'success, 'failure> =
 
 /// Functions for Result type (functor and monad).
 /// For applicatives, see Validation.
-[<RequireQualifiedAccess>]  // RequireQualifiedAccess forces the `Result.xxx` prefix to be used
+[<RequireQualifiedAccess>] // RequireQualifiedAccess forces the `Result.xxx` prefix to be used
 module Result =
 
     /// Pass in a function to handle each case of `Result`
@@ -58,13 +58,12 @@ module Result =
     let bind = Result.bind
 
     // Like `map` but with a unit-returning function
-    let iter (f : _ -> unit) result =
-        map f result |> ignore
+    let iter (f: _ -> unit) result = map f result |> ignore
 
     /// Apply a Result<fn> to a Result<x> monadically
     let apply fR xR =
         match fR, xR with
-        | Ok f, Ok x -> Ok (f x)
+        | Ok f, Ok x -> Ok(f x)
         | Error err1, Ok _ -> Error err1
         | Ok _, Error err2 -> Error err2
         | Error err1, Error _ -> Error err1
@@ -74,7 +73,7 @@ module Result =
     let sequence aListOfResults =
         let (<*>) = apply // monadic
         let (<!>) = map
-        let cons head tail = head::tail
+        let cons head tail = head :: tail
         let consR headR tailR = cons <!> headR <*> tailR
         let initialValue = Ok [] // empty list inside Result
 
@@ -121,8 +120,7 @@ module Result =
         | Error _ -> false
 
     /// Predicate that returns true on failure
-    let isError xR =
-        xR |> isOk |> not
+    let isError xR = xR |> isOk |> not
 
     /// Lift a given predicate into a predicate that works on Results
     let filter pred =
@@ -182,39 +180,47 @@ module ResultComputationExpression =
         member __.Bind(x, f) = Result.bind f x
 
         member __.ReturnFrom(x) = x
-        member this.Zero() = this.Return ()
+        member this.Zero() = this.Return()
 
         member __.Delay(f) = f
-        member __.Run(f) = f()
+        member __.Run(f) = f ()
 
         member this.While(guard, body) =
-            if not (guard())
-            then this.Zero()
-            else this.Bind( body(), fun () ->
-                this.While(guard, body))
+            if not (guard ()) then
+                this.Zero()
+            else
+                this.Bind(body (), fun () -> this.While(guard, body))
 
         member this.TryWith(body, handler) =
-            try this.ReturnFrom(body())
-            with e -> handler e
+            try
+                this.ReturnFrom(body ())
+            with e ->
+                handler e
 
         member this.TryFinally(body, compensation) =
-            try this.ReturnFrom(body())
-            finally compensation()
+            try
+                this.ReturnFrom(body ())
+            finally
+                compensation ()
 
-        member this.Using(disposable:#System.IDisposable, body) =
+        member this.Using(disposable: #System.IDisposable, body) =
             let body' = fun () -> body disposable
-            this.TryFinally(body', fun () ->
-                match disposable with
+
+            this.TryFinally(
+                body',
+                fun () ->
+                    match disposable with
                     | null -> ()
-                    | disp -> disp.Dispose())
+                    | disp -> disp.Dispose()
+            )
 
-        member this.For(sequence:seq<_>, body) =
-            this.Using(sequence.GetEnumerator(),fun enum ->
-                this.While(enum.MoveNext,
-                    this.Delay(fun () -> body enum.Current)))
+        member this.For(sequence: seq<_>, body) =
+            this.Using(
+                sequence.GetEnumerator(),
+                fun enum -> this.While(enum.MoveNext, this.Delay(fun () -> body enum.Current))
+            )
 
-        member this.Combine (a,b) =
-            this.Bind(a, fun () -> b())
+        member this.Combine(a, b) = this.Bind(a, fun () -> b ())
 
     let result = new ResultBuilder()
 
@@ -224,29 +230,28 @@ module ResultComputationExpression =
 // by combining their errors ("applicative-style")
 //==============================================
 
-type Validation<'Success,'Failure> =
-    Result<'Success,'Failure list>
+type Validation<'Success, 'Failure> = Result<'Success, 'Failure list>
 
 /// Functions for the `Validation` type (mostly applicative)
-[<RequireQualifiedAccess>]  // RequireQualifiedAccess forces the `Validation.xxx` prefix to be used
+[<RequireQualifiedAccess>] // RequireQualifiedAccess forces the `Validation.xxx` prefix to be used
 module Validation =
 
     /// Alias for Result.Map
     let map = Result.map
 
     /// Apply a Validation<fn> to a Validation<x> applicatively
-    let apply (fV:Validation<_,_>) (xV:Validation<_,_>) :Validation<_,_> =
+    let apply (fV: Validation<_, _>) (xV: Validation<_, _>) : Validation<_, _> =
         match fV, xV with
-        | Ok f, Ok x -> Ok (f x)
+        | Ok f, Ok x -> Ok(f x)
         | Error errs1, Ok _ -> Error errs1
         | Ok _, Error errs2 -> Error errs2
-        | Error errs1, Error errs2 -> Error (errs1 @ errs2)
+        | Error errs1, Error errs2 -> Error(errs1 @ errs2)
 
     // combine a list of Validation, applicatively
-    let sequence (aListOfValidations:Validation<_,_> list) =
+    let sequence (aListOfValidations: Validation<_, _> list) =
         let (<*>) = apply
         let (<!>) = Result.map
-        let cons head tail = head::tail
+        let cons head tail = head :: tail
         let consR headR tailR = cons <!> headR <*> tailR
         let initialValue = Ok [] // empty list inside Result
 
@@ -257,11 +262,9 @@ module Validation =
     //-----------------------------------
     // Converting between Validations and other types
 
-    let ofResult xR :Validation<_,_> =
-        xR |> Result.mapError List.singleton
+    let ofResult xR : Validation<_, _> = xR |> Result.mapError List.singleton
 
-    let toResult (xV:Validation<_,_>) :Result<_,_> =
-        xV
+    let toResult (xV: Validation<_, _>) : Result<_, _> = xV
 
 
 
@@ -269,87 +272,83 @@ module Validation =
 // Async utilities
 //==============================================
 
-[<RequireQualifiedAccess>]  // RequireQualifiedAccess forces the `Async.xxx` prefix to be used
+[<RequireQualifiedAccess>] // RequireQualifiedAccess forces the `Async.xxx` prefix to be used
 module Async =
 
     /// Lift a function to Async
     let map f xA =
         async {
-        let! x = xA
-        return f x
+            let! x = xA
+            return f x
         }
 
     /// Lift a value to Async
-    let retn x =
-        async.Return x
+    let retn x = async.Return x
 
     /// Apply an Async function to an Async value
     let apply fA xA =
         async {
-         // start the two asyncs in parallel
-        let! fChild = Async.StartChild fA  // run in parallel
-        let! x = xA
-        // wait for the result of the first one
-        let! f = fChild
-        return f x
+            // start the two asyncs in parallel
+            let! fChild = Async.StartChild fA // run in parallel
+            let! x = xA
+            // wait for the result of the first one
+            let! f = fChild
+            return f x
         }
 
     /// Apply a monadic function to an Async value
-    let bind f xA = async.Bind(xA,f)
+    let bind f xA = async.Bind(xA, f)
 
 
 //==============================================
 // AsyncResult
 //==============================================
 
-type AsyncResult<'Success,'Failure> =
-    Async<Result<'Success,'Failure>>
+type AsyncResult<'Success, 'Failure> = Async<Result<'Success, 'Failure>>
 
-[<RequireQualifiedAccess>]  // RequireQualifiedAccess forces the `AsyncResult.xxx` prefix to be used
+[<RequireQualifiedAccess>] // RequireQualifiedAccess forces the `AsyncResult.xxx` prefix to be used
 module AsyncResult =
 
     /// Lift a function to AsyncResult
-    let map f (x:AsyncResult<_,_>) : AsyncResult<_,_> =
-        Async.map (Result.map f) x
+    let map f (x: AsyncResult<_, _>) : AsyncResult<_, _> = Async.map (Result.map f) x
 
     /// Lift a function to AsyncResult
-    let mapError f (x:AsyncResult<_,_>) : AsyncResult<_,_> =
-        Async.map (Result.mapError f) x
+    let mapError f (x: AsyncResult<_, _>) : AsyncResult<_, _> = Async.map (Result.mapError f) x
 
     /// Apply ignore to the internal value
-    let ignore x =
-        x |> map ignore
+    let ignore x = x |> map ignore
 
     /// Lift a value to AsyncResult
-    let retn x : AsyncResult<_,_> =
-        x |> Result.Ok |> Async.retn
+    let retn x : AsyncResult<_, _> = x |> Result.Ok |> Async.retn
 
     /// Handles asynchronous exceptions and maps them into Failure cases using the provided function
-    let catch f (x:AsyncResult<_,_>) : AsyncResult<_,_> =
+    let catch f (x: AsyncResult<_, _>) : AsyncResult<_, _> =
         x
         |> Async.Catch
-        |> Async.map(function
-            | Choice1Of2 (Ok v) -> Ok v
-            | Choice1Of2 (Error err) -> Error err
-            | Choice2Of2 ex -> Error (f ex))
+        |> Async.map (function
+            | Choice1Of2(Ok v) -> Ok v
+            | Choice1Of2(Error err) -> Error err
+            | Choice2Of2 ex -> Error(f ex))
 
 
     /// Apply an AsyncResult function to an AsyncResult value, monadically
-    let applyM (fAsyncResult : AsyncResult<_, _>) (xAsyncResult : AsyncResult<_, _>) :AsyncResult<_,_> =
-        fAsyncResult |> Async.bind (fun fResult ->
-        xAsyncResult |> Async.map (fun xResult -> Result.apply fResult xResult))
+    let applyM (fAsyncResult: AsyncResult<_, _>) (xAsyncResult: AsyncResult<_, _>) : AsyncResult<_, _> =
+        fAsyncResult
+        |> Async.bind (fun fResult -> xAsyncResult |> Async.map (fun xResult -> Result.apply fResult xResult))
 
     /// Apply an AsyncResult function to an AsyncResult value, applicatively
-    let applyA (fAsyncResult : AsyncResult<_, _>) (xAsyncResult : AsyncResult<_, _>) :AsyncResult<_,_> =
-        fAsyncResult |> Async.bind (fun fResult ->
-        xAsyncResult |> Async.map (fun xResult -> Validation.apply fResult xResult))
+    let applyA (fAsyncResult: AsyncResult<_, _>) (xAsyncResult: AsyncResult<_, _>) : AsyncResult<_, _> =
+        fAsyncResult
+        |> Async.bind (fun fResult -> xAsyncResult |> Async.map (fun xResult -> Validation.apply fResult xResult))
 
     /// Apply a monadic function to an AsyncResult value
-    let bind (f: 'a -> AsyncResult<'b,'c>) (xAsyncResult : AsyncResult<_, _>) :AsyncResult<_,_> = async {
-        let! xResult = xAsyncResult
-        match xResult with
-        | Ok x -> return! f x
-        | Error err -> return (Error err)
+    let bind (f: 'a -> AsyncResult<'b, 'c>) (xAsyncResult: AsyncResult<_, _>) : AsyncResult<_, _> =
+        async {
+            let! xResult = xAsyncResult
+
+            match xResult with
+            | Ok x -> return! f x
+            | Error err -> return (Error err)
         }
 
 
@@ -358,13 +357,13 @@ module AsyncResult =
     let sequenceM resultList =
         let (<*>) = applyM
         let (<!>) = map
-        let cons head tail = head::tail
+        let cons head tail = head :: tail
         let consR headR tailR = cons <!> headR <*> tailR
         let initialValue = retn [] // empty list inside Result
 
         // loop through the list, prepending each element
         // to the initial value
-        List.foldBack consR resultList  initialValue
+        List.foldBack consR resultList initialValue
 
 
     /// Convert a list of AsyncResult into a AsyncResult<list> using applicative style.
@@ -372,38 +371,33 @@ module AsyncResult =
     let sequenceA resultList =
         let (<*>) = applyA
         let (<!>) = map
-        let cons head tail = head::tail
+        let cons head tail = head :: tail
         let consR headR tailR = cons <!> headR <*> tailR
         let initialValue = retn [] // empty list inside Result
 
         // loop through the list, prepending each element
         // to the initial value
-        List.foldBack consR resultList  initialValue
+        List.foldBack consR resultList initialValue
 
     //-----------------------------------
     // Converting between AsyncResults and other types
 
     /// Lift a value into an Ok inside a AsyncResult
-    let ofSuccess x : AsyncResult<_,_> =
-        x |> Result.Ok |> Async.retn
+    let ofSuccess x : AsyncResult<_, _> = x |> Result.Ok |> Async.retn
 
     /// Lift a value into an Error inside a AsyncResult
-    let ofError x : AsyncResult<_,_> =
-        x |> Result.Error |> Async.retn
+    let ofError x : AsyncResult<_, _> = x |> Result.Error |> Async.retn
 
     /// Lift a Result into an AsyncResult
-    let ofResult x : AsyncResult<_,_> =
-        x |> Async.retn
+    let ofResult x : AsyncResult<_, _> = x |> Async.retn
 
     /// Lift a Async into an AsyncResult
-    let ofAsync x : AsyncResult<_,_> =
-        x |> Async.map Result.Ok
+    let ofAsync x : AsyncResult<_, _> = x |> Async.map Result.Ok
 
     //-----------------------------------
     // Utilities lifted from Async
 
-    let sleep (ms:int) =
-        Async.Sleep ms |> ofAsync
+    let sleep (ms: int) = Async.Sleep ms |> ofAsync
 
 
 // ==================================
@@ -422,49 +416,40 @@ module AsyncResultComputationExpression =
         member __.Bind(asyncResult, f) = AsyncResult.bind f asyncResult
         member __.ReturnFrom(asyncResult) = asyncResult
 
-        member __.Zero () : AsyncResult<unit, 'TError> =
-            result.Zero() |> async.Return
+        member __.Zero() : AsyncResult<unit, 'TError> = result.Zero() |> async.Return
 
-        member __.Delay
-            (generator: unit -> AsyncResult<'T, 'TError>)
-            : AsyncResult<'T, 'TError> =
-          async.Delay generator
+        member __.Delay(generator: unit -> AsyncResult<'T, 'TError>) : AsyncResult<'T, 'TError> = async.Delay generator
 
         member this.Combine
-            (computation1: AsyncResult<unit, 'TError>,
-             computation2: AsyncResult<'U, 'TError>)
+            (computation1: AsyncResult<unit, 'TError>, computation2: AsyncResult<'U, 'TError>)
             : AsyncResult<'U, 'TError> =
-          this.Bind(computation1, fun () -> computation2)
+            this.Bind(computation1, fun () -> computation2)
 
         member __.TryWith
-            (computation: AsyncResult<'T, 'TError>,
-             handler: System.Exception -> AsyncResult<'T, 'TError>)
+            (computation: AsyncResult<'T, 'TError>, handler: System.Exception -> AsyncResult<'T, 'TError>)
             : AsyncResult<'T, 'TError> =
-          async.TryWith(computation, handler)
+            async.TryWith(computation, handler)
 
         member __.TryFinally
-            (computation: AsyncResult<'T, 'TError>,
-             compensation: unit -> unit)
+            (computation: AsyncResult<'T, 'TError>, compensation: unit -> unit)
             : AsyncResult<'T, 'TError> =
-          async.TryFinally(computation, compensation)
+            async.TryFinally(computation, compensation)
 
         member __.Using
-            (resource: 'T when 'T :> IDisposable,
-             binder: 'T -> AsyncResult<'U, 'TError>)
+            (resource: 'T :> IDisposable, binder: 'T -> AsyncResult<'U, 'TError>)
             : AsyncResult<'U, 'TError> =
-          async.Using(resource, binder)
+            async.Using(resource, binder)
 
-        member this.While
-            (guard: unit -> bool, computation: AsyncResult<unit, 'TError>)
-            : AsyncResult<unit, 'TError> =
-          if not <| guard () then this.Zero ()
-          else this.Bind(computation, fun () -> this.While (guard, computation))
+        member this.While(guard: unit -> bool, computation: AsyncResult<unit, 'TError>) : AsyncResult<unit, 'TError> =
+            if not <| guard () then
+                this.Zero()
+            else
+                this.Bind(computation, fun () -> this.While(guard, computation))
 
-        member this.For
-            (sequence: #seq<'T>, binder: 'T -> AsyncResult<unit, 'TError>)
-            : AsyncResult<unit, 'TError> =
-          this.Using(sequence.GetEnumerator (), fun enum ->
-            this.While(enum.MoveNext,
-              this.Delay(fun () -> binder enum.Current)))
+        member this.For(sequence: #seq<'T>, binder: 'T -> AsyncResult<unit, 'TError>) : AsyncResult<unit, 'TError> =
+            this.Using(
+                sequence.GetEnumerator(),
+                fun enum -> this.While(enum.MoveNext, this.Delay(fun () -> binder enum.Current))
+            )
 
     let asyncResult = AsyncResultBuilder()

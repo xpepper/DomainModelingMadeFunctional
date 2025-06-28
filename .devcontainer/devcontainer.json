@@ -11,11 +11,12 @@
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
-		"vscode": {		
+		"vscode": {
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
+				"ms-dotnettools.csharp",
 				"Ionide.Ionide-fsharp",
-				"ms-dotnettools.csharp"
+				"paolodellepiane.fantomas-fmt"
 			]
 		}
 	},
@@ -24,7 +25,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "dotnet restore",
+	"postCreateCommand": "dotnet restore && dotnet tool restore"
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"

@@ -54,10 +54,7 @@ type Price = private Price of decimal
 type BillingAmount = private BillingAmount of decimal
 
 /// Represents a PDF attachment
-type PdfAttachment = {
-    Name : string
-    Bytes: byte[]
-    }
+type PdfAttachment = { Name: string; Bytes: byte[] }
 
 
 // ===============================
@@ -77,7 +74,7 @@ module ConstrainedType =
             let msg = sprintf "%s must not be more than %i chars" fieldName maxLen
             Error msg
         else
-            Ok (ctor str)
+            Ok(ctor str)
 
     /// Create a optional constrained string using the constructor provided
     /// Return None if input is null, empty.
@@ -90,7 +87,7 @@ module ConstrainedType =
             let msg = sprintf "%s must not be more than %i chars" fieldName maxLen
             Error msg
         else
-            Ok (ctor str |> Some)
+            Ok(ctor str |> Some)
 
     /// Create a constrained integer using the constructor provided
     /// Return Error if input is less than minVal or more than maxVal
@@ -102,7 +99,7 @@ module ConstrainedType =
             let msg = sprintf "%s: Must not be greater than %i" fieldName maxVal
             Error msg
         else
-            Ok (ctor i)
+            Ok(ctor i)
 
     /// Create a constrained decimal using the constructor provided
     /// Return Error if input is less than minVal or more than maxVal
@@ -114,16 +111,16 @@ module ConstrainedType =
             let msg = sprintf "%s: Must not be greater than %M" fieldName maxVal
             Error msg
         else
-            Ok (ctor i)
+            Ok(ctor i)
 
     /// Create a constrained string using the constructor provided
     /// Return Error if input is null. empty, or does not match the regex pattern
-    let createLike fieldName  ctor pattern str =
+    let createLike fieldName ctor pattern str =
         if String.IsNullOrEmpty(str) then
             let msg = sprintf "%s: Must not be null or empty" fieldName
             Error msg
-        elif System.Text.RegularExpressions.Regex.IsMatch(str,pattern) then
-            Ok (ctor str)
+        elif System.Text.RegularExpressions.Regex.IsMatch(str, pattern) then
+            Ok(ctor str)
         else
             let msg = sprintf "%s: '%s' must match the pattern '%s'" fieldName str pattern
             Error msg
@@ -226,8 +223,8 @@ module ProductCode =
     /// Return the string value inside a ProductCode
     let value productCode =
         match productCode with
-        | Widget (WidgetCode wc) -> wc
-        | Gizmo (GizmoCode gc) -> gc
+        | Widget(WidgetCode wc) -> wc
+        | Gizmo(GizmoCode gc) -> gc
 
     /// Create an ProductCode from a string
     /// Return Error if input is null, empty, or not matching pattern
@@ -236,17 +233,15 @@ module ProductCode =
             let msg = sprintf "%s: Must not be null or empty" fieldName
             Error msg
         else if code.StartsWith("W") then
-            WidgetCode.create fieldName code
-            |> Result.map Widget
+            WidgetCode.create fieldName code |> Result.map Widget
         else if code.StartsWith("G") then
-            GizmoCode.create fieldName code
-            |> Result.map Gizmo
+            GizmoCode.create fieldName code |> Result.map Gizmo
         else
             let msg = sprintf "%s: Format not recognized '%s'" fieldName code
             Error msg
 
 
-module UnitQuantity  =
+module UnitQuantity =
 
     /// Return the value inside a UnitQuantity
     let value (UnitQuantity v) = v
@@ -266,25 +261,21 @@ module KilogramQuantity =
     let create fieldName v =
         ConstrainedType.createDecimal fieldName KilogramQuantity 0.05M 100M v
 
-module OrderQuantity  =
+module OrderQuantity =
 
     /// Return the value inside a OrderQuantity
     let value qty =
         match qty with
-        | Unit uq ->
-            uq |> UnitQuantity.value |> decimal
-        | Kilogram kq ->
-            kq |> KilogramQuantity.value
+        | Unit uq -> uq |> UnitQuantity.value |> decimal
+        | Kilogram kq -> kq |> KilogramQuantity.value
 
     /// Create a OrderQuantity from a productCode and quantity
-    let create fieldName productCode quantity  =
+    let create fieldName productCode quantity =
         match productCode with
         | Widget _ ->
             UnitQuantity.create fieldName (int quantity) // convert float to int
-            |> Result.map OrderQuantity.Unit             // lift to OrderQuantity type
-        | Gizmo _ ->
-            KilogramQuantity.create fieldName quantity
-            |> Result.map OrderQuantity.Kilogram         // lift to OrderQuantity type
+            |> Result.map OrderQuantity.Unit // lift to OrderQuantity type
+        | Gizmo _ -> KilogramQuantity.create fieldName quantity |> Result.map OrderQuantity.Kilogram // lift to OrderQuantity type
 
 module Price =
 
@@ -301,15 +292,12 @@ module Price =
     let unsafeCreate v =
         create v
         |> function
-            | Ok price ->
-                price
-            | Error err ->
-                failwithf "Not expecting Price to be out of bounds: %s" err
+            | Ok price -> price
+            | Error err -> failwithf "Not expecting Price to be out of bounds: %s" err
 
     /// Multiply a Price by a decimal qty.
     /// Return Error if new price is out of bounds.
-    let multiply qty (Price p) =
-        create (qty * p)
+    let multiply qty (Price p) = create (qty * p)
 
 module BillingAmount =
 

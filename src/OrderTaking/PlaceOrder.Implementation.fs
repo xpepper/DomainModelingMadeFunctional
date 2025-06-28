@@ -397,10 +397,9 @@ let createEvents: CreateEvents =
 
 type ShippingCost = Price
 
-type ShippingInformation = {
-    Method: ShippingMethod
-    Cost: ShippingCost
-}
+type ShippingInformation =
+    { Method: ShippingMethod
+      Cost: ShippingCost }
 
 type CalculateShippingInformation = Address -> ShippingInformation
 
@@ -409,21 +408,18 @@ type PriceOrderToPriceOrderWithShippingInformation = PricedOrder -> PricedOrderW
 // This is still with canned data
 let calculateShippingInformation: CalculateShippingInformation =
     fun address ->
-    {
-        Method = ShippingMethod.Bartolini
-        Cost = Price.unsafeCreate 2M
-    }
+        { Method = ShippingMethod.Bartolini
+          Cost = Price.unsafeCreate 2M }
 
 let pricedOrderToPricedOrderWithShippingInformationFactory
-    (calculateShippingInformation: CalculateShippingInformation) : PriceOrderToPriceOrderWithShippingInformation =
-        fun pricedOrder ->
-            let shippingInformation = calculateShippingInformation(pricedOrder.ShippingAddress)
+    (calculateShippingInformation: CalculateShippingInformation)
+    : PriceOrderToPriceOrderWithShippingInformation =
+    fun pricedOrder ->
+        let shippingInformation = calculateShippingInformation (pricedOrder.ShippingAddress)
 
-            {
-                PricedOrder = pricedOrder
-                ShippingMethod = shippingInformation.Method
-                ShippingCost = shippingInformation.Cost
-            }
+        { PricedOrder = pricedOrder
+          ShippingMethod = shippingInformation.Method
+          ShippingCost = shippingInformation.Cost }
 
 let placeOrder
     checkProductExists // dependency
@@ -445,7 +441,8 @@ let placeOrder
                 |> AsyncResult.ofResult
                 |> AsyncResult.mapError PlaceOrderError.Pricing
 
-            let priceOrderWithShippingInformation = pricedOrderToPricedOrderWithShippingInformation pricedOrder
+            let priceOrderWithShippingInformation =
+                pricedOrderToPricedOrderWithShippingInformation pricedOrder
 
             let acknowledgementOption =
                 acknowledgeOrder
